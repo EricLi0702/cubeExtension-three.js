@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html,body{
+            margin:0;
+            height:100%;
+        }
+        #c{
+            width:100%;
+            height:100%;
+            display:block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id='c'></canvas>
+</body>
+<script type="module">
+    import * as THREE from './resources/threejs/r125/build/three.module.js';
+    function main(){
+        const canvas = document.querySelector('#c');
+        const renderer = new THREE.WebGLRenderer({canvas});
+        
+        const fov = 75;
+        const aspect = 2;//the canvas default
+        const near = 0.1;
+        const far = 5;
+        const camera = new THREE.PerspectiveCamera(fov,aspect,near,far);
+        camera.position.z = 2;
+        //Three.js에서 Scene이란 씬 그래프에서 가장 상단에 위치한 요소입니다. 뭔가를 화면에 렌더링하고 싶다면 먼저 Scene에 추가해야 하죠
+        const scene = new THREE.Scene();
+
+        {
+            const color = 0xFFFFFF;
+            const intensity = 1;
+            const light = new THREE.DirectionalLight(color, intensity);
+            light.position.set(-1, 2, 4);
+            scene.add(light);
+        }
+        
+        // /다음으로 간단한 정육면체를 만들어보죠. Three.js에서 렌더링되는 대부분의 3D 요소는 정점 데이터가 정의된 기하학 객체를 필요로 합니다. 지금은 정육면체를 만들어야 하니 BoxGeometry 생성자를 호출하겠습니다.
+        const boxWidth = 1;
+        const boxHeight = 1;
+        const boxDepth = 1;
+        const geometry =  new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
+
+        function makeInstance(geometry, color, x){
+            const materail = new THREE.MeshPhongMaterial({color});
+
+            const cube = new THREE.Mesh(geometry,materail);
+            scene.add(cube);
+
+            cube.position.x = x;
+
+            return cube
+        }
+
+        const cubes = [
+            makeInstance(geometry, 0x44aa88, 0),
+            makeInstance(geometry, 0x8844aa, -2),
+            makeInstance(geometry, 0xaa8844, 2)
+        ]
+            //다음으로 Material을 만들고 색을 지정합니다. 색을 지정할 때는 CSS처럼 숫자 형태의 hex 코드를 이용합니다(# 대신 0x. 역주).
+        // const material = new THREE.MeshPhongMaterial({color: 0x44aa88});
+        
+        //그리고 앞서 만든 Geometry(물체의 형태)와 Material(물체의 색, 밝기, 질감 등)을 이용해 Mesh를 만듭니다. Mesh는 Geometry, Material 외에도 물체의 위치, 방향, 크기 등을 담은 객체입니다.
+        // const cube = new THREE.Mesh(geometry, material);
+
+        //마지막으로 완성된 정육면체 Mesh를 Scene에 넣어줍니다.
+        // scene.add(cube)
+        
+        function resizeRendererToDisplaySize(renderer){
+            const canvas = renderer.domElement;
+            const pixelRatio = window.devicePixelRatio;
+            const width = canvas.clientWidth * pixelRatio | 0;
+            const height = canvas.clientHeight * pixelRatio | 0;
+            const needResize = canvas.width !== width || canvas.height !== height;
+            if(needResize){
+                renderer.setSize(width,height,false);
+            }
+            return needResize;
+        }
+
+        function render(time) {
+            time *= 0.001; //convert time to seconds
+            // console.log(time)
+            if(resizeRendererToDisplaySize(renderer)){
+                const canvas = renderer.domElement;
+                camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                camera.updateProjectionMatrix();
+            }
+
+
+            cubes.forEach((cube,ndx) => {
+                const speed = 1 + ndx * 1;
+                const rot = time * speed;
+                cube.rotation.x = rot;
+                cube.rotation.y = rot;
+            });
+            renderer.render(scene, camera);
+
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+
+        //renderer의 render 메서드에 Scene과 Camera를 넘겨주면 화면을 렌더링할 수 있습니다.
+        renderer.render(scene, camera);
+    }
+
+    
+
+    main();
+</script>
+</html>
